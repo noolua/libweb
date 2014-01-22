@@ -1,4 +1,4 @@
-TARGET=eweb
+TARGET=mweb
 LIBNAME=$(addprefix lib, $(TARGET)).a
 
 LIBOBJS+=./deps/http-parser/http_parser.o
@@ -12,7 +12,7 @@ AR=ar
 RANLIB=ranlib
 ARFLAGS=rcu
 STRIP=strip
-LIBS+=lua pthread m
+LIBS+=uv lua pthread m
 
 
 all:./deps/http-parser samples
@@ -21,12 +21,19 @@ all:./deps/http-parser samples
 	git clone --depth 1 https://github.com/joyent/http-parser.git ./deps/http-parser
 	@mkdir -p ./lib
 $(LIBNAME):$(LIBOBJS)
-	@$(AR) $(ARFLAGS) ./lib/$(LIBNAME) $(LIBOBJS)
-samples:$(LIBNAME)
+	@$(AR) $(ARFLAGS) ./lib/$(LIBNAME) $(LIBOBJS)	
+samples:$(LIBNAME) miniserver webserver
+
+miniserver:$(LIBNAME)
 	@echo "Compiling $@"
-	@$(CC) -I./include $(CFLAGS) -I./src -c ./samples/src/main.c -o ./samples/src/main.o
-	@$(CC) -I./include $(CFLAGS) ./samples/src/main.o -L./lib $(LDFLAGS) $(addprefix -l,$(LIBS)) -l${TARGET} -o ./samples/$@	
-	@$(STRIP) ./samples/$@
+	@$(CC) -I./include $(CFLAGS) -I./src -c ./samples/miniserver/miniserver.c -o ./samples/miniserver/miniserver.o
+	@$(CC) -I./include $(CFLAGS) ./samples/miniserver/miniserver.o -L./lib $(LDFLAGS) $(addprefix -l,$(LIBS)) -l${TARGET} -o ./samples/miniserver/$@
+	@$(STRIP) ./samples/miniserver/$@
+webserver:$(LIBNAME)
+	@echo "Compiling $@"
+	@$(CC) -I./include $(CFLAGS) -I./src -c ./samples/webserver/webserver.c -o ./samples/webserver/webserver.o
+	@$(CC) -I./include $(CFLAGS) ./samples/webserver/webserver.o -L./lib $(LDFLAGS) $(addprefix -l,$(LIBS)) -l${TARGET} -o ./samples/webserver/$@
+	@$(STRIP) ./samples/webserver/$@
 install:
 	@echo "intstall '$(TARGET)' -> ${PREFIX}/bin/"
 	@cp ./$(TARGET) ${PREFIX}/bin/
@@ -43,7 +50,8 @@ distclean:clean
 clean:
 	@echo "Clean ..."
 	@rm -f ./deps/http-parser/*.o
-	@rm -f ./samples/src/*.o
+	@rm -f ./samples/webserver/*.o ./samples/webserver/webserver
+	@rm -f ./samples/miniserver/*.o ./samples/miniserver/miniserver
 	@rm -f ./$(TARGET)
 	@rm -f ./lib/*.a
 	@rm -f ./src/*.o

@@ -16,3 +16,8 @@
 *.exe
 *.out
 *.app
+
+#MacOSX
+.DS_Store
+samples/miniserver/miniserver
+samples/webserver/webserver

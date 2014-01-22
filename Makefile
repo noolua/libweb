@@ -2,7 +2,9 @@ TARGET=mweb
 LIBNAME=$(addprefix lib, $(TARGET)).a
 
 LIBOBJS+=./deps/http-parser/http_parser.o
-LIBOBJS+=./src/xd.o
+LIBOBJS+=./src/response.o
+LIBOBJS+=./src/request.o
+LIBOBJS+=./src/server.o
 
 PREFIX=/usr/local
 CFLAGS+=-std=gnu99 -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wall -O2 -fPIC -I./include -I./src -I./deps/http-parser -I$(HOME)/usr/local/include 

@@ -1,9 +1,8 @@
 #include <stdio.h>
-
 #include "mweb.h"
+
 int main(){
-    http_parser *one = web_parser_create(0);    
-    printf("this is sample web server\n");
-    web_parser_destory(one);
+    mweb_quiet_syslog(1, 0);
+    printf("this is sample web settings:\n");
     return 0;
 }

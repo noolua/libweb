@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		95FD372D188F96FA00867206 /* webserver.c in Sources */ = {isa = PBXBuildFile; fileRef = 95FD372B188F96FA00867206 /* webserver.c */; };
 		95FD372F188F97CA00867206 /* http_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 95FD372E188F97CA00867206 /* http_parser.c */; };
+		95FD3734188FA16A00867206 /* request.c in Sources */ = {isa = PBXBuildFile; fileRef = 95FD3732188FA16A00867206 /* request.c */; };
+		95FD3735188FA16A00867206 /* server.c in Sources */ = {isa = PBXBuildFile; fileRef = 95FD3733188FA16A00867206 /* server.c */; };
+		95FD373D188FBD9B00867206 /* response.c in Sources */ = {isa = PBXBuildFile; fileRef = 95FD373C188FBD9B00867206 /* response.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +31,13 @@
 		95FD372B188F96FA00867206 /* webserver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = webserver.c; path = ../../samples/webserver/webserver.c; sourceTree = "<group>"; };
 		95FD372C188F96FA00867206 /* webserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = webserver.h; path = ../../samples/webserver/webserver.h; sourceTree = "<group>"; };
 		95FD372E188F97CA00867206 /* http_parser.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = http_parser.c; path = "../../deps/http-parser/http_parser.c"; sourceTree = "<group>"; };
+		95FD3732188FA16A00867206 /* request.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = request.c; path = ../../src/request.c; sourceTree = "<group>"; };
+		95FD3733188FA16A00867206 /* server.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = server.c; path = ../../src/server.c; sourceTree = "<group>"; };
+		95FD3738188FB33E00867206 /* server.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = server.h; path = ../../src/server.h; sourceTree = "<group>"; };
+		95FD3739188FB35000867206 /* request.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = request.h; path = ../../src/request.h; sourceTree = "<group>"; };
+		95FD373A188FB5C300867206 /* mweb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mweb.h; path = ../../include/mweb.h; sourceTree = "<group>"; };
+		95FD373B188FBD8E00867206 /* response.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = response.h; path = ../../src/response.h; sourceTree = "<group>"; };
+		95FD373C188FBD9B00867206 /* response.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = response.c; path = ../../src/response.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +71,7 @@
 			isa = PBXGroup;
 			children = (
 				95FD3730188F97E900867206 /* http_parser */,
+				95FD3731188FA15900867206 /* lib */,
 				95FD372B188F96FA00867206 /* webserver.c */,
 				95FD372C188F96FA00867206 /* webserver.h */,
 			);
@@ -73,6 +84,20 @@
 				95FD372E188F97CA00867206 /* http_parser.c */,
 			);
 			name = http_parser;
+			sourceTree = "<group>";
+		};
+		95FD3731188FA15900867206 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				95FD373A188FB5C300867206 /* mweb.h */,
+				95FD3739188FB35000867206 /* request.h */,
+				95FD3732188FA16A00867206 /* request.c */,
+				95FD373B188FBD8E00867206 /* response.h */,
+				95FD373C188FBD9B00867206 /* response.c */,
+				95FD3738188FB33E00867206 /* server.h */,
+				95FD3733188FA16A00867206 /* server.c */,
+			);
+			name = lib;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -126,8 +151,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95FD3735188FA16A00867206 /* server.c in Sources */,
 				95FD372F188F97CA00867206 /* http_parser.c in Sources */,
+				95FD3734188FA16A00867206 /* request.c in Sources */,
 				95FD372D188F96FA00867206 /* webserver.c in Sources */,
+				95FD373D188FBD9B00867206 /* response.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

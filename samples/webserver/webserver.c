@@ -12,26 +12,56 @@
 
 #include "mweb.h"
 
-#define NULL_DEV "/dev/null"
-#define WWW_ROOT_DEFAULT    "/var/miniweb"
-#define LOCKFILE "/var/run/miniweb.pid"
-#define LOCKMODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
+#define MAX_TICK 5
+
+typedef struct timer_context_s{
+    uv_timer_t timer;
+    uv_loop_t *loop;
+    const char *address;
+    int port;
+}timer_context_t;
+
+static int tick = 0;
+
+static void uv_timer_close_cb(uv_handle_t* handle){
+    timer_context_t *ctx = handle->data;
+    free(ctx);
+}
+
+static void mweb_timer_switch(uv_timer_t* timer, int status){
+    timer_context_t *ctx = (timer_context_t*)timer->data;
+    if (mweb_is_running()) {
+        mweb_cleanup();
+        LOG("server cleanup\n");
+        ctx->port++;
+        
+        tick++;
+        if(tick == MAX_TICK){
+            uv_timer_stop(timer);
+            uv_close((uv_handle_t*)timer, uv_timer_close_cb);
+        }
+    }else{
+        int ret = mweb_startup(ctx->loop, ctx->address, ctx->port);
+        if (ret < 0) {
+            ERR("server startup failed: %d\n", ret);
+        }else{
+            LOG("server startup successfull, listen: %d\n", ctx->port);
+        }
+    }
+}
 
 int main(int argc, const char** argv) {
     int ret = 0;
-    uv_loop_t *loop = uv_default_loop();
-    ret = mweb_startup(loop, "127.0.0.1", 3000);
-    if (ret < 0) {
-        ERR("server startup failed: %d\n", ret);
-        return -1;
-    }
+    timer_context_t *ctx = malloc(sizeof(timer_context_t));
+    ctx->address = "127.0.0.1";
+    ctx->port = 3000;
+    ctx->timer.data = ctx;
+    ctx->loop = uv_default_loop();
+    uv_timer_init(ctx->loop, &ctx->timer);
+    ret = uv_timer_start(&ctx->timer, mweb_timer_switch, 2000, 5000);
     
-    /* http_service_run */
-    uv_run(loop, UV_RUN_DEFAULT);
+    uv_run(ctx->loop, UV_RUN_DEFAULT);
     
-    /* cleanup */
-    ret = mweb_cleanup();
-
     return ret;
 }
 

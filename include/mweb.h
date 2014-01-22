@@ -29,6 +29,7 @@ extern int MWEB_SYSLOG;
 
 void mweb_quiet_syslog(int quiet, int syslog);
 int mweb_startup(uv_loop_t *loop, const char *address, int port);
+int mweb_is_running();
 int mweb_cleanup();
 
 

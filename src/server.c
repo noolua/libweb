@@ -15,11 +15,11 @@
 int MWEB_QUIET = 0;
 int MWEB_SYSLOG = 0;
 
-struct mweb_server_s{
+typedef struct mweb_server_s{
     http_parser_settings *settings;
     uv_tcp_t server;
     uv_loop_t *loop;
-};
+}mweb_server_t;
 
 static void web_alloc_buffer_cb(uv_handle_t* client, size_t suggested_size, uv_buf_t* buf){
     buf->base = malloc(suggested_size);
@@ -71,10 +71,17 @@ static void web_new_connection_cb(uv_stream_t* server, int status) {
     }
 }
 
+static mweb_server_t *web = NULL;
+static void web_server_close_cb(uv_handle_t* server){
+    mweb_server_t *close_web = (mweb_server_t*)server->data;
+    free(close_web);
+    web = NULL;
+}
+
 /******************************************************************
  * public interfaces
  ******************************************************************/
-static mweb_server_t *web = NULL;
+
 int mweb_startup(uv_loop_t *loop, const char *address, int port){
     int ret = -1;
     if (!web) {
@@ -96,9 +103,13 @@ int mweb_startup(uv_loop_t *loop, const char *address, int port){
     return ret;
 }
 
+int mweb_is_running(){
+    return web ? 1:0;
+}
+
 int mweb_cleanup(){
     if (web) {
-        free(web);
+        uv_close((uv_handle_t*)&web->server, web_server_close_cb);
     }
     return 0;
 }

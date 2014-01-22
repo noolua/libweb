@@ -10,6 +10,4 @@
 #define miniweb_server_h
 #include "mweb.h"
 
-typedef struct mweb_server_s mweb_server_t;
-
 #endif

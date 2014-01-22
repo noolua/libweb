@@ -19,5 +19,7 @@
 
 #MacOSX
 .DS_Store
+xcuserdata
+project.xcworkspace
 samples/miniserver/miniserver
 samples/webserver/webserver

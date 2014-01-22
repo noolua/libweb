@@ -99,13 +99,13 @@ void tcp_read_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 
     /* handle error */
     if (nread < 0) {
-        fprintf(stderr, "Error on reading: %s.\n", uv_strerror(nread));
+        fprintf(stderr, "Error on reading: %s.\n", uv_strerror((int)nread));
 
         uv_close((uv_handle_t*) stream, NULL);
     }
 
     /*  call our http parser on the received tcp payload */
-    int parsed = http_parser_execute(&http_request->parser, &settings, 
+    size_t parsed = http_parser_execute(&http_request->parser, &settings,
             buf->base, nread);
 
     if (parsed < nread) {

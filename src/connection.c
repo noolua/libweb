@@ -27,7 +27,7 @@ static void on_http_response_send_complete_cb(void* connection, int status){
 
 static void on_http_parser_complete_cb(void* connection, int status){
     mweb_http_connection_t *cnn = (mweb_http_connection_t*)connection;
-    cnn->response = mweb_http_response_create_404(cnn->stream, on_http_response_send_complete_cb, connection);
+    cnn->response = mweb_http_response_404(cnn->stream, on_http_response_send_complete_cb, connection);
 }
 
 mweb_http_connection_t *mweb_http_connection_create(uv_tcp_t *stream,

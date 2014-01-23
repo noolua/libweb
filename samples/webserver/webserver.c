@@ -11,6 +11,7 @@
 
 #include "mweb.h"
 
+#define WWW_ROOT    "/var/webserver/www"
 #define MAX_TICK 5
 
 typedef struct timer_context_s{
@@ -39,10 +40,11 @@ static void mweb_timer_switch(uv_timer_t* timer, int status){
             uv_close((uv_handle_t*)timer, uv_timer_close_cb);
         }
     }else{
-        int ret = mweb_startup(ctx->loop, ctx->address, ctx->port);
+        int ret = mweb_startup(ctx->loop, ctx->address, ctx->port, WWW_ROOT, 1);
         if (ret < 0) {
             ERR("server startup failed: %d\n", ret);
         }else{
+            LOG("server wwwroot: '%s'\n", WWW_ROOT);
             LOG("server startup successfull, listen: %d\n", ctx->port);
         }
     }

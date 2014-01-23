@@ -18,6 +18,8 @@ int MWEB_SYSLOG = 0;
 typedef struct mweb_server_s{
     uv_tcp_t server;
     uv_loop_t *loop;
+    const char* wwwroot;
+    int cacheoff;
 }mweb_server_t;
 
 static void web_connection_close_cb(uv_handle_t* handle){
@@ -95,12 +97,14 @@ static void web_server_close_cb(uv_handle_t* server){
  * public interfaces
  ******************************************************************/
 
-int mweb_startup(uv_loop_t *loop, const char *address, int port){
+int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* wwwroot, int cacheoff){
     int ret = -1;
     if (!web) {
         struct sockaddr_in listen_address;
         web = mweb_alloc(sizeof(mweb_server_t));
         web->loop = loop;
+        web->wwwroot = wwwroot;
+        web->cacheoff = cacheoff;
         uv_ip4_addr(address, port, &listen_address);
         uv_tcp_init(web->loop, &web->server);
         uv_tcp_bind(&web->server, (const struct sockaddr*)&listen_address);

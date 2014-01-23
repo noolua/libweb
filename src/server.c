@@ -23,22 +23,22 @@ typedef struct mweb_server_s{
 static void web_connection_close_cb(uv_handle_t* handle){
     mweb_http_connection_t *connection = (mweb_http_connection_t*)handle->data;
     mweb_http_connection_destory(connection);
-    free(handle);
+    mweb_free(handle);
 }
 
 static void web_connection_after_shutdown_cb(uv_shutdown_t* req, int status){
     uv_close((uv_handle_t*)req->handle, web_connection_close_cb);
-    free(req);
+    mweb_free(req);
 }
 
 static void web_connection_should_shutdown_cb(uv_stream_t* stream, int status){
     uv_shutdown_t *req;
-    req = malloc(sizeof(uv_shutdown_t));
+    req = mweb_alloc(sizeof(uv_shutdown_t));
     uv_shutdown(req, (uv_stream_t*)stream, web_connection_after_shutdown_cb);
 }
 
 static void web_alloc_buffer_cb(uv_handle_t* client, size_t suggested_size, uv_buf_t* buf){
-    buf->base = malloc(suggested_size);
+    buf->base = mweb_alloc(suggested_size);
     buf->len = suggested_size;
 }
 
@@ -57,7 +57,7 @@ static void web_request_after_read_cb(uv_stream_t* stream, ssize_t nread, const 
             web_connection_should_shutdown_cb(stream, 0);
         }
     }
-    free(buf->base);
+    mweb_free(buf->base);
 }
 
 static void web_new_connection_cb(uv_stream_t* server, int status) {
@@ -68,7 +68,7 @@ static void web_new_connection_cb(uv_stream_t* server, int status) {
         ERR("Error on connection: %s.\n", uv_strerror(status));
         return;
     }
-    accept_stream = malloc(sizeof(uv_tcp_t));
+    accept_stream = mweb_alloc(sizeof(uv_tcp_t));
     uv_tcp_init(web->loop, (uv_tcp_t*) accept_stream);
     connection = mweb_http_connection_create(accept_stream, web_connection_should_shutdown_cb);
     accept_stream->data = connection;
@@ -87,7 +87,7 @@ static void web_new_connection_cb(uv_stream_t* server, int status) {
 static mweb_server_t *web = NULL;
 static void web_server_close_cb(uv_handle_t* server){
     mweb_server_t *close_web = (mweb_server_t*)server->data;
-    free(close_web);
+    mweb_free(close_web);
     web = NULL;
 }
 
@@ -99,7 +99,7 @@ int mweb_startup(uv_loop_t *loop, const char *address, int port){
     int ret = -1;
     if (!web) {
         struct sockaddr_in listen_address;
-        web = malloc(sizeof(mweb_server_t));
+        web = mweb_alloc(sizeof(mweb_server_t));
         web->loop = loop;
         uv_ip4_addr(address, port, &listen_address);
         uv_tcp_init(web->loop, &web->server);

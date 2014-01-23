@@ -7,7 +7,6 @@
 //
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "mweb.h"
@@ -25,7 +24,7 @@ static int tick = 0;
 
 static void uv_timer_close_cb(uv_handle_t* handle){
     timer_context_t *ctx = handle->data;
-    free(ctx);
+    mweb_free(ctx);
 }
 
 static void mweb_timer_switch(uv_timer_t* timer, int status){
@@ -51,7 +50,7 @@ static void mweb_timer_switch(uv_timer_t* timer, int status){
 
 int main(int argc, const char** argv) {
     int ret = 0;
-    timer_context_t *ctx = malloc(sizeof(timer_context_t));
+    timer_context_t *ctx = mweb_alloc(sizeof(timer_context_t));
     ctx->address = "127.0.0.1";
     ctx->port = 3000;
     ctx->timer.data = ctx;

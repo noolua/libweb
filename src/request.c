@@ -6,19 +6,9 @@
 //  Copyright (c) 2014年 coco-hub.com. All rights reserved.
 //
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "request.h"
-
-#define COPY_STRING(p, l, str, len) \
-    do{                             \
-        char* cp_ = malloc(len+1);  \
-        memcpy(cp_, str, len);      \
-        cp_[len] = 0;               \
-        p = cp_;                    \
-        l = len+1;                  \
-    }while(0)
 
 typedef struct mweb_http_header_s{
     mweb_string_t field;
@@ -48,7 +38,7 @@ static int on_http_url_cb(http_parser* parser, const char* chunk, size_t len) {
 
 static int on_http_header_field_cb(http_parser* parser, const char* chunk, size_t len) {
     mweb_http_request_t* request = parser->data;
-    mweb_http_header_t* header = malloc(sizeof(mweb_http_header_t));
+    mweb_http_header_t* header = mweb_alloc(sizeof(mweb_http_header_t));
     MWSTRING_INIT(header->field);
     MWSTRING_INIT(header->value);
     header->next = NULL;
@@ -105,7 +95,7 @@ static http_parser_settings simple_settings = {
  ******************************************************************/
 
 mweb_http_request_t *mweb_http_request_create(mweb_http_request_parser_complete_cb parser_complete_cb, void* connection){
-    mweb_http_request_t* http_request = malloc(sizeof(mweb_http_request_t));
+    mweb_http_request_t* http_request = mweb_alloc(sizeof(mweb_http_request_t));
     MWSTRING_INIT(http_request->url);
     MWSTRING_INIT(http_request->method);
     MWSTRING_INIT(http_request->body);
@@ -126,10 +116,10 @@ void mweb_http_request_destory(mweb_http_request_t* request){
         mweb_http_header_t* next = remove->next;
         MWSTRING_RELEASE(remove->field);
         MWSTRING_RELEASE(remove->value);
-        free(remove);
+        mweb_free(remove);
         remove = next;
     }
-    free(request);
+    mweb_free(request);
 }
 
 size_t mweb_http_request_parser(mweb_http_request_t* request, const char* base, size_t len){

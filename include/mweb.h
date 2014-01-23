@@ -8,6 +8,17 @@
 #ifndef miniweb_mweb_h
 #define miniweb_mweb_h
 
+#include <stdio.h>
+
+#ifndef HAVE_ALLOC_POOL
+    #include <stdlib.h>
+    #define mweb_alloc(size)    malloc(size)
+    #define mweb_free(ptr)      free(ptr)
+#else
+    #define mweb_alloc(size)  NULL
+    #define mweb_free(ptr)
+#endif
+
 #include <syslog.h>
 #include <uv.h>
 #include "http_parser.h"
@@ -30,10 +41,10 @@ typedef struct mweb_string_s{
 }mweb_string_t;
 
 #define MWSTRING_INIT(str)  do{str.base = NULL; str.len = 0;}while(0)
-#define MWSTRING_RELEASE(str) do{if(str.base){free((void*)str.base); str.base = NULL;} str.len = 0;}while(0)
+#define MWSTRING_RELEASE(str) do{if(str.base){mweb_free((void*)str.base); str.base = NULL;} str.len = 0;}while(0)
 #define MWSTRING_COPY_CSTRING(str, cstr, cstr_len)          \
     do{                                                     \
-        char* cp_ = malloc(cstr_len+1);                     \
+        char* cp_ = mweb_alloc(cstr_len+1);                 \
         memcpy(cp_, cstr, cstr_len);                        \
         cp_[cstr_len] = 0;                                  \
         str.base = cp_;                                     \

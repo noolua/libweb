@@ -2,6 +2,7 @@ TARGET=mweb
 LIBNAME=$(addprefix lib, $(TARGET)).a
 
 LIBOBJS+=./deps/http-parser/http_parser.o
+LIBOBJS+=./src/connection.o
 LIBOBJS+=./src/response.o
 LIBOBJS+=./src/request.o
 LIBOBJS+=./src/server.o

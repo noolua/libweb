@@ -33,7 +33,6 @@ static void mweb_timer_switch(uv_timer_t* timer, int status){
     if (mweb_is_running()) {
         mweb_cleanup();
         LOG("server cleanup\n");
-        ctx->port++;
         
         tick++;
         if(tick == MAX_TICK){

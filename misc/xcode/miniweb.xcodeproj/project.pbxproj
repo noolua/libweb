@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9557376F1890C587007FB613 /* connection.c in Sources */ = {isa = PBXBuildFile; fileRef = 9557376E1890C587007FB613 /* connection.c */; };
 		95FD372D188F96FA00867206 /* webserver.c in Sources */ = {isa = PBXBuildFile; fileRef = 95FD372B188F96FA00867206 /* webserver.c */; };
 		95FD372F188F97CA00867206 /* http_parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 95FD372E188F97CA00867206 /* http_parser.c */; };
 		95FD3734188FA16A00867206 /* request.c in Sources */ = {isa = PBXBuildFile; fileRef = 95FD3732188FA16A00867206 /* request.c */; };
@@ -27,6 +28,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9557376D1890C577007FB613 /* connection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = connection.h; path = ../../src/connection.h; sourceTree = "<group>"; };
+		9557376E1890C587007FB613 /* connection.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = connection.c; path = ../../src/connection.c; sourceTree = "<group>"; };
 		95FD371E188F963D00867206 /* miniweb */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = miniweb; sourceTree = BUILT_PRODUCTS_DIR; };
 		95FD372B188F96FA00867206 /* webserver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = webserver.c; path = ../../samples/webserver/webserver.c; sourceTree = "<group>"; };
 		95FD372C188F96FA00867206 /* webserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = webserver.h; path = ../../samples/webserver/webserver.h; sourceTree = "<group>"; };
@@ -94,6 +97,8 @@
 				95FD3732188FA16A00867206 /* request.c */,
 				95FD373B188FBD8E00867206 /* response.h */,
 				95FD373C188FBD9B00867206 /* response.c */,
+				9557376D1890C577007FB613 /* connection.h */,
+				9557376E1890C587007FB613 /* connection.c */,
 				95FD3738188FB33E00867206 /* server.h */,
 				95FD3733188FA16A00867206 /* server.c */,
 			);
@@ -152,6 +157,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				95FD3735188FA16A00867206 /* server.c in Sources */,
+				9557376F1890C587007FB613 /* connection.c in Sources */,
 				95FD372F188F97CA00867206 /* http_parser.c in Sources */,
 				95FD3734188FA16A00867206 /* request.c in Sources */,
 				95FD372D188F96FA00867206 /* webserver.c in Sources */,

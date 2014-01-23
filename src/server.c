@@ -9,17 +9,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "request.h"
+#include "connection.h"
 #include "server.h"
 
 int MWEB_QUIET = 0;
 int MWEB_SYSLOG = 0;
 
 typedef struct mweb_server_s{
-    http_parser_settings *settings;
     uv_tcp_t server;
     uv_loop_t *loop;
 }mweb_server_t;
+
+static void web_connection_close_cb(uv_handle_t* handle){
+    mweb_http_connection_t *connection = (mweb_http_connection_t*)handle->data;
+    mweb_http_connection_destory(connection);
+    free(handle);
+}
+
+static void web_connection_after_shutdown_cb(uv_shutdown_t* req, int status){
+    uv_close((uv_handle_t*)req->handle, web_connection_close_cb);
+    free(req);
+}
+
+static void web_connection_should_shutdown_cb(uv_stream_t* stream, int status){
+    uv_shutdown_t *req;
+    req = malloc(sizeof(uv_shutdown_t));
+    uv_shutdown(req, (uv_stream_t*)stream, web_connection_after_shutdown_cb);
+}
 
 static void web_alloc_buffer_cb(uv_handle_t* client, size_t suggested_size, uv_buf_t* buf){
     buf->base = malloc(suggested_size);
@@ -27,47 +43,44 @@ static void web_alloc_buffer_cb(uv_handle_t* client, size_t suggested_size, uv_b
 }
 
 static void web_request_after_read_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
-    mweb_http_request_t* http_request = stream->data;
-    mweb_server_t *web = (mweb_server_t*)http_request->server->data;
-    
     if (nread < 0) {
-        ERR("Error on reading: %s.\n", uv_strerror((int)nread));
-        uv_close((uv_handle_t*) stream, NULL);
+        if(nread != UV_EOF)
+            ERR("Error on reading: %s.\n", uv_strerror((int)nread));
+        web_connection_should_shutdown_cb(stream, 0);
     }
-    
-    size_t parsed = http_parser_execute(&http_request->parser, web->settings, buf->base, nread);
-    
-    if (parsed < nread){
-        ERR("Error on parsing HTTP request: \n");
-        uv_close((uv_handle_t*) stream, NULL);
+    if(nread > 0){
+        mweb_http_connection_t *connection = (mweb_http_connection_t *)stream->data;
+        
+        size_t parsed = mweb_http_connection_parser(connection, buf->base, nread);
+        if (parsed < nread){
+            ERR("Error on parsing HTTP request: \n");
+            web_connection_should_shutdown_cb(stream, 0);
+        }
     }
     free(buf->base);
 }
 
-static void web_connection_close_cb(uv_handle_t* handle){
-    mweb_http_request_t* http_request = (mweb_http_request_t*)handle->data;
-    free(http_request);
-}
-
 static void web_new_connection_cb(uv_stream_t* server, int status) {
+    uv_tcp_t* accept_stream;
+    mweb_http_connection_t *connection;
     mweb_server_t *web = (mweb_server_t*)server->data;
-    mweb_http_request_t* http_request = malloc(sizeof(mweb_http_request_t));
-    
     if (status < 0) {
         ERR("Error on connection: %s.\n", uv_strerror(status));
         return;
     }
+    accept_stream = malloc(sizeof(uv_tcp_t));
+    uv_tcp_init(web->loop, (uv_tcp_t*) accept_stream);
+    connection = mweb_http_connection_create(accept_stream, web_connection_should_shutdown_cb);
+    accept_stream->data = connection;
+    if (!connection) {
+        ERR("create http connection failed\n");
+        return;
+    }
     
-    uv_tcp_init(web->loop, (uv_tcp_t*) &http_request->stream);
-    http_request->stream.data = http_request;
-    http_request->parser.data = http_request;
-    http_request->server = server;
-    
-    if (uv_accept(server, &http_request->stream) == 0) {
-        http_parser_init(&http_request->parser, HTTP_REQUEST);
-        uv_read_start(&http_request->stream, web_alloc_buffer_cb, web_request_after_read_cb);
+    if (uv_accept(server, (uv_stream_t*)accept_stream) == 0) {
+        uv_read_start((uv_stream_t*)accept_stream, web_alloc_buffer_cb, web_request_after_read_cb);
     } else {
-        uv_close((uv_handle_t*) &http_request->stream, web_connection_close_cb);
+        mweb_http_connection_destory(connection);
     }
 }
 
@@ -88,7 +101,6 @@ int mweb_startup(uv_loop_t *loop, const char *address, int port){
         struct sockaddr_in listen_address;
         web = malloc(sizeof(mweb_server_t));
         web->loop = loop;
-        web->settings = mweb_global_http_parser_settings();
         uv_ip4_addr(address, port, &listen_address);
         uv_tcp_init(web->loop, &web->server);
         uv_tcp_bind(&web->server, (const struct sockaddr*)&listen_address);

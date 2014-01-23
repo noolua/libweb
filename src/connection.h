@@ -10,8 +10,6 @@
 #define miniweb_connection_h
 
 #include "mweb.h"
-#include "request.h"
-#include "response.h"
 
 typedef void (*mweb_http_connection_should_close_cb)(uv_stream_t*stream, int status);
 

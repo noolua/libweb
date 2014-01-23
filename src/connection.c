@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "request.h"
+#include "response.h"
 #include "connection.h"
 
 struct mweb_http_connection_s{

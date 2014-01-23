@@ -16,7 +16,7 @@
 *.exe
 *.out
 *.app
-
+deps/
 #MacOSX
 .DS_Store
 xcuserdata

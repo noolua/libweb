@@ -2,7 +2,7 @@
 #include "mweb.h"
 
 int main(){
-    const char *address = "127.0.0.1";
+    const char *address = "0.0.0.0";
     const char *wwwroot = "/var/www";
     int cacheoff = 1;
     int port = 3000;

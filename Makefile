@@ -38,10 +38,8 @@ webserver:$(LIBNAME)
 	@$(CC) -I./include $(CFLAGS) ./samples/webserver/webserver.o -L./lib $(LDFLAGS) $(addprefix -l,$(LIBS)) -l${TARGET} -o ./samples/webserver/$@
 	@$(STRIP) ./samples/webserver/$@
 install:
-	@echo "intstall '$(TARGET)' -> ${PREFIX}/bin/"
-	@cp ./$(TARGET) ${PREFIX}/bin/
-	@cp ./include/*.h ${PREFIX}/include/
-	@cp ./lib/*.a ${PREFIX}/lib/
+	cp ./include/*.h ${PREFIX}/include/
+	cp ./lib/*.a ${PREFIX}/lib/
 uninstall:
 	@echo "rm '$(TARGET)' form '${PREFIX}/bin'"
 	@rm -f ${PREFIX}/bin/$(TARGET)

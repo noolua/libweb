@@ -107,7 +107,7 @@ int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* www
         web->cacheoff = cacheoff;
         uv_ip4_addr(address, port, &listen_address);
         uv_tcp_init(web->loop, &web->server);
-        uv_tcp_bind(&web->server, (const struct sockaddr*)&listen_address);
+        uv_tcp_bind(&web->server, (const struct sockaddr*)&listen_address, 0);
         web->server.data = web;
         
         if ((ret = uv_listen((uv_stream_t*) &web->server, SOMAXCONN, web_new_connection_cb)) < 0){

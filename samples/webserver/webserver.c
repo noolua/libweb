@@ -28,7 +28,7 @@ static void uv_timer_close_cb(uv_handle_t* handle){
     mweb_free(ctx);
 }
 
-static void mweb_timer_switch(uv_timer_t* timer, int status){
+static void mweb_timer_switch(uv_timer_t* timer){
     timer_context_t *ctx = (timer_context_t*)timer->data;
     if (mweb_is_running()) {
         mweb_cleanup();

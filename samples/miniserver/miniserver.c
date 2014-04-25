@@ -3,7 +3,7 @@
 
 int main(){
     const char *address = "0.0.0.0";
-    const char *wwwroot = "/Users/rockee/jd-all/jd-webside/www";
+    const char *wwwroot = "/home/rockee/Downloads/libweb/samples/www";
     int cacheoff = 1;
     int port = 3000;
     uv_loop_t *loop = uv_default_loop();

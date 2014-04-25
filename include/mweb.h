@@ -121,6 +121,7 @@ void mweb_quiet_syslog(int quiet, int syslog);
 int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* wwwroot, int cacheoff);
 int mweb_is_running();
 int mweb_cleanup();
+const char* mweb_root();
 
 
 #endif // miniweb_mweb_h

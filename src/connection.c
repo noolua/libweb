@@ -26,8 +26,12 @@ static void on_http_response_send_complete_cb(void* connection, int status){
 }
 
 static void on_http_parser_complete_cb(void* connection, int status){
+    char filepath[1024];
     mweb_http_connection_t *cnn = (mweb_http_connection_t*)connection;
-    cnn->response = mweb_http_response_404(cnn->stream, on_http_response_send_complete_cb, connection);
+    const char *url = mweb_http_request_url(cnn->request);
+    const char *root = mweb_root();
+    sprintf(filepath, "%s%s", root, url);
+    cnn->response = mweb_http_response_file(cnn->stream, on_http_response_send_complete_cb, connection, filepath);
 }
 
 mweb_http_connection_t *mweb_http_connection_create(uv_tcp_t *stream,

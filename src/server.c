@@ -134,3 +134,10 @@ void mweb_quiet_syslog(int quiet, int syslog){
     MWEB_QUIET = quiet;
     MWEB_SYSLOG = syslog;
 }
+
+const char* mweb_root(){
+    if(web){
+        return web->wwwroot;
+    }
+    return NULL;
+}

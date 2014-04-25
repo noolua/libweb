@@ -32,6 +32,7 @@ struct mweb_http_response_s{
     int type;
     uv_write_t req;
     uv_buf_t buf;
+    uv_tcp_t *stream;
     mweb_http_response_send_complete_cb response_send_complete_cb;
     void* connection;
     void* context;
@@ -84,12 +85,17 @@ static void mweb_response_after_write_cb(uv_write_t* req, int status) {
     if(response->type == response_type_404)
         response->response_send_complete_cb(response->connection, status);
     else if(response->type == response_type_file){
-        /* fixedme */
-        /*send file until finished*/
         mweb_response_file_context_t *context = (mweb_response_file_context_t *)response->context;
-        mweb_file_context_destory(context);
-        response->context = NULL;
-        response->response_send_complete_cb(response->context, status);
+        if(mweb_file_context_read(context) > 0){
+            response->buf = uv_buf_init(context->chunk, (unsigned int)context->chunk_len);
+            if(uv_write(&response->req, (uv_stream_t*)response->stream, &response->buf, 1, mweb_response_after_write_cb)){
+                ERR("Send response failed\n");
+            }
+        }else{
+            mweb_file_context_destory(context);
+            response->context = NULL;
+            response->response_send_complete_cb(response->connection, status);
+        }
     }
 }
 
@@ -111,15 +117,16 @@ mweb_http_response_t *mweb_http_response_file(uv_tcp_t* stream, mweb_http_respon
     mweb_http_response_t *response = NULL;
     mweb_response_file_context_t *context = mweb_file_context_create(filepath);
     if(context){
-        mweb_http_response_t *response = mweb_alloc(sizeof(mweb_http_response_t));
+        response = mweb_alloc(sizeof(mweb_http_response_t));
         response->type = response_type_file;
         response->req.data = response;
         response->response_send_complete_cb = response_send_complete_cb;
         response->connection = connection;
         response->context = context;
+        response->stream = stream;
         if(mweb_file_context_read(context) > 0){
             response->buf = uv_buf_init(context->chunk, (unsigned int)context->chunk_len);
-            if(uv_write(&response->req, (uv_stream_t*)stream, &response->buf, 1, mweb_response_after_write_cb)){
+            if(uv_write(&response->req, (uv_stream_t*)response->stream, &response->buf, 1, mweb_response_after_write_cb)){
                 ERR("Send response failed\n");
             }
         }

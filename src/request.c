@@ -126,3 +126,6 @@ size_t mweb_http_request_parser(mweb_http_request_t* request, const char* base, 
     return http_parser_execute(&request->parser, &simple_settings, base, len);
 }
 
+const char *mweb_http_request_url(mweb_http_request_t *request){
+    return request->url.base;
+}

@@ -3,7 +3,7 @@
 
 int main(){
     const char *address = "0.0.0.0";
-    const char *wwwroot = "/var/www";
+    const char *wwwroot = "/Users/rockee/jd-all/jd-webside/www";
     int cacheoff = 1;
     int port = 3000;
     uv_loop_t *loop = uv_default_loop();

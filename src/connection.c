@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "request.h"
 #include "response.h"
@@ -28,10 +29,25 @@ static void on_http_response_send_complete_cb(void* connection, int status){
 static void on_http_parser_complete_cb(void* connection, int status){
     char filepath[1024];
     mweb_http_connection_t *cnn = (mweb_http_connection_t*)connection;
-    const char *url = mweb_http_request_url(cnn->request);
     const char *root = mweb_root();
-    sprintf(filepath, "%s%s", root, url);
-    cnn->response = mweb_http_response_file(cnn->stream, on_http_response_send_complete_cb, connection, filepath);
+    const char *url = mweb_http_request_url(cnn->request);
+    if(strcmp(url, "/") == 0){
+        url = "/index.html";
+    }
+    const char *tk = strstr(url, "?");
+    if(tk){
+        char dp[1024];
+        strncpy(dp, url, 1023);
+        dp[tk-url] = 0;
+        sprintf(filepath, "%s%s", root, dp);
+    }else{
+        sprintf(filepath, "%s%s", root, url);
+    }
+    if(filepath[strlen(filepath) - 1] == '/'){
+        cnn->response = mweb_http_response_404(cnn->stream, on_http_response_send_complete_cb, connection);
+    }else{
+        cnn->response = mweb_http_response_file(cnn->stream, on_http_response_send_complete_cb, connection, filepath);
+    }
 }
 
 mweb_http_connection_t *mweb_http_connection_create(uv_tcp_t *stream,

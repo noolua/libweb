@@ -10,13 +10,10 @@
 #define miniweb_request_h
 
 #include "mweb.h"
-
-typedef void (*mweb_http_request_parser_complete_cb)(void* connection, int status);
-typedef struct mweb_http_request_s mweb_http_request_t;
+#include "mweb_types.h"
 
 mweb_http_request_t *mweb_http_request_create(mweb_http_request_parser_complete_cb parser_complete_cb, void* connection);
 void mweb_http_request_destory(mweb_http_request_t* request);
 size_t mweb_http_request_parser(mweb_http_request_t* request, const char* base, size_t len);
-const char *mweb_http_request_url(mweb_http_request_t *request);
 
 #endif

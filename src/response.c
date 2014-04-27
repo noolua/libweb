@@ -20,31 +20,6 @@ CRLF
 "404 Not Found" CRLF
 ;
 
-#define FILE_CHUNK_SIZE (65536)
-
-enum ResponseType {
-    response_type_404 = 0,
-    response_type_file = 1,
-    response_type_lua = 2,
-};
-
-struct mweb_http_response_s{
-    int type;
-    uv_write_t req;
-    uv_buf_t buf;
-    uv_tcp_t *stream;
-    mweb_http_response_send_complete_cb response_send_complete_cb;
-    void* connection;
-    void* context;
-};
-
-typedef struct mweb_response_file_context_s{
-    FILE *fp;
-    char chunk[FILE_CHUNK_SIZE];
-    size_t chunk_len;
-    size_t file_len;
-    size_t read_bytes;
-}mweb_response_file_context_t;
 
 static mweb_response_file_context_t *mweb_file_context_create(const char* filepath){
     mweb_response_file_context_t * context = mweb_alloc(sizeof(mweb_response_file_context_t));

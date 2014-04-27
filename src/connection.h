@@ -10,12 +10,9 @@
 #define miniweb_connection_h
 
 #include "mweb.h"
+#include "mweb_types.h"
 
-typedef void (*mweb_http_connection_should_close_cb)(uv_stream_t*stream, int status);
-
-typedef struct mweb_http_connection_s mweb_http_connection_t;
-
-mweb_http_connection_t *mweb_http_connection_create(uv_tcp_t *stream,
+mweb_http_connection_t *mweb_http_connection_create(mweb_server_t* server, uv_tcp_t *stream,
                                                     mweb_http_connection_should_close_cb connection_should_close_cb);
 size_t mweb_http_connection_parser(mweb_http_connection_t* connection, const char* data, size_t len);
 

@@ -21,6 +21,7 @@
 
 #include <syslog.h>
 #include <uv.h>
+
 #include "http_parser.h"
 
 #define LOG(...)                                            \
@@ -97,6 +98,8 @@
 #define HTTP_STATUS_510 "510 Not Extended"
 #define HTTP_STATUS_511 "511 Network Authentication Required"
 
+typedef int (*mweb_request_handle_cb)(void* req);
+
 typedef struct mweb_string_s{
     const char* base;
     size_t len;
@@ -118,10 +121,9 @@ extern int MWEB_QUIET;
 extern int MWEB_SYSLOG;
 
 void mweb_quiet_syslog(int quiet, int syslog);
-int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* wwwroot, int cacheoff);
+int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* wwwroot, int cacheoff, mweb_request_handle_cb cb, void* cb_data);
 int mweb_is_running();
 int mweb_cleanup();
-const char* mweb_root();
 
 
 #endif // miniweb_mweb_h

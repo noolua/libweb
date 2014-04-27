@@ -9,5 +9,6 @@
 #ifndef miniweb_server_h
 #define miniweb_server_h
 #include "mweb.h"
+#include "mweb_types.h"
 
 #endif

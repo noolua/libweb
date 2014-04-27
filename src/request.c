@@ -10,22 +10,6 @@
 
 #include "request.h"
 
-typedef struct mweb_http_header_s{
-    mweb_string_t field;
-    mweb_string_t value;
-    struct mweb_http_header_s *next;
-}mweb_http_header_t;
-
-struct mweb_http_request_s{
-    void *connection;
-    mweb_http_request_parser_complete_cb parser_complete_cb;
-    http_parser parser;
-    mweb_string_t url;
-    mweb_string_t method;
-    mweb_string_t body;
-    mweb_http_header_t *header_first;
-};
-
 static int on_http_message_begin_cb(http_parser* parser) {
     return 0;
 }
@@ -124,8 +108,4 @@ void mweb_http_request_destory(mweb_http_request_t* request){
 
 size_t mweb_http_request_parser(mweb_http_request_t* request, const char* base, size_t len){
     return http_parser_execute(&request->parser, &simple_settings, base, len);
-}
-
-const char *mweb_http_request_url(mweb_http_request_t *request){
-    return request->url.base;
 }

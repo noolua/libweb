@@ -15,13 +15,6 @@
 int MWEB_QUIET = 0;
 int MWEB_SYSLOG = 0;
 
-typedef struct mweb_server_s{
-    uv_tcp_t server;
-    uv_loop_t *loop;
-    const char* wwwroot;
-    int cacheoff;
-}mweb_server_t;
-
 static void web_connection_close_cb(uv_handle_t* handle){
     mweb_http_connection_t *connection = (mweb_http_connection_t*)handle->data;
     mweb_http_connection_destory(connection);
@@ -72,7 +65,7 @@ static void web_new_connection_cb(uv_stream_t* server, int status) {
     }
     accept_stream = mweb_alloc(sizeof(uv_tcp_t));
     uv_tcp_init(web->loop, (uv_tcp_t*) accept_stream);
-    connection = mweb_http_connection_create(accept_stream, web_connection_should_shutdown_cb);
+    connection = mweb_http_connection_create(web, accept_stream, web_connection_should_shutdown_cb);
     accept_stream->data = connection;
     if (!connection) {
         ERR("create http connection failed\n");
@@ -97,7 +90,7 @@ static void web_server_close_cb(uv_handle_t* server){
  * public interfaces
  ******************************************************************/
 
-int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* wwwroot, int cacheoff){
+int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* wwwroot, int cacheoff, mweb_request_handle_cb cb, void* cb_data){
     int ret = -1;
     if (!web) {
         struct sockaddr_in listen_address;
@@ -105,6 +98,8 @@ int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* www
         web->loop = loop;
         web->wwwroot = wwwroot;
         web->cacheoff = cacheoff;
+        web->req_hd_cb = cb;
+        web->req_hd_cb_data = cb_data;
         uv_ip4_addr(address, port, &listen_address);
         uv_tcp_init(web->loop, &web->server);
         uv_tcp_bind(&web->server, (const struct sockaddr*)&listen_address, 0);
@@ -133,11 +128,4 @@ int mweb_cleanup(){
 void mweb_quiet_syslog(int quiet, int syslog){
     MWEB_QUIET = quiet;
     MWEB_SYSLOG = syslog;
-}
-
-const char* mweb_root(){
-    if(web){
-        return web->wwwroot;
-    }
-    return NULL;
 }

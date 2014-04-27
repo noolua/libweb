@@ -7,6 +7,7 @@
 //
 #ifndef mweb_types_h
 #define mweb_types_h
+#include "http_parser.h"
 
 #define FILE_CHUNK_SIZE (65536)
 

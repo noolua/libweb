@@ -22,8 +22,6 @@
 #include <syslog.h>
 #include <uv.h>
 
-#include "http_parser.h"
-
 #define LOG(...)                                            \
     do {                                                    \
         if (!MWEB_QUIET) fprintf(stdout, __VA_ARGS__);      \

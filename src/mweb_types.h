@@ -7,6 +7,7 @@
 //
 #ifndef mweb_types_h
 #define mweb_types_h
+
 #include "http_parser.h"
 
 #define FILE_CHUNK_SIZE (65536)
@@ -18,7 +19,8 @@ typedef void (*mweb_http_request_parser_complete_cb)(void* connection, int statu
 enum ResponseType {
     response_type_404 = 0,
     response_type_file = 1,
-    response_type_lua = 2,
+    response_type_text = 2,
+    response_type_lua = 3,
 };
 
 typedef struct mweb_http_response_s{
@@ -38,6 +40,16 @@ typedef struct mweb_response_file_context_s{
     size_t file_len;
     size_t read_bytes;
 }mweb_response_file_context_t;
+
+typedef struct mweb_response_text_context_s{
+    mweb_string_t text;
+}mweb_response_text_context_t;
+
+typedef struct mweb_response_lua_context_s{
+    int is_lua_thread;
+    lua_State *L;
+    mweb_string_t res;
+}mweb_response_lua_context_t;
 
 typedef struct mweb_http_header_s{
     mweb_string_t field;
@@ -60,8 +72,7 @@ typedef struct mweb_server_s{
     uv_loop_t *loop;
     const char* wwwroot;
     int cacheoff;
-    mweb_request_handle_cb req_hd_cb;
-    void* req_hd_cb_data;
+    lua_State* L;
 }mweb_server_t;
 
 typedef struct mweb_http_connection_s{

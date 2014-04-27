@@ -8,7 +8,7 @@ int main(){
     int cacheoff = 1;
     int port = 3000;
     uv_loop_t *loop = uv_default_loop();
-    mweb_startup(loop, address, port, wwwroot, cacheoff, NULL, NULL);
+    mweb_startup(loop, address, port, wwwroot, cacheoff, NULL);
     LOG("server www_root: '%s', cacheoff: %d\n", wwwroot, cacheoff);
     LOG("server bind: '%s', listen: %d\n", address, port);
 

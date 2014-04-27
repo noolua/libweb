@@ -40,7 +40,7 @@ static void mweb_timer_switch(uv_timer_t* timer){
             uv_close((uv_handle_t*)timer, uv_timer_close_cb);
         }
     }else{
-        int ret = mweb_startup(ctx->loop, ctx->address, ctx->port, WWW_ROOT, 1, NULL, NULL);
+        int ret = mweb_startup(ctx->loop, ctx->address, ctx->port, WWW_ROOT, 1, NULL);
         if (ret < 0) {
             ERR("server startup failed: %d\n", ret);
         }else{

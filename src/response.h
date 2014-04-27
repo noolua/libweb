@@ -12,8 +12,7 @@
 #include "mweb.h"
 #include "mweb_types.h"
 
-mweb_http_response_t *mweb_http_response_404(uv_tcp_t* stream, mweb_http_response_send_complete_cb response_send_complete_cb, void* connection);
-mweb_http_response_t *mweb_http_response_file(uv_tcp_t* stream, mweb_http_response_send_complete_cb response_senc_complete_cb, void* connection, const char* filepath);
+int mweb_http_response(mweb_http_connection_t *cnn, mweb_http_response_send_complete_cb response_senc_complete_cb);
 void mweb_http_response_destory(mweb_http_response_t* response);
 
 #endif

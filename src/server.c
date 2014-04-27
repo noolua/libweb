@@ -90,7 +90,7 @@ static void web_server_close_cb(uv_handle_t* server){
  * public interfaces
  ******************************************************************/
 
-int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* wwwroot, int cacheoff, mweb_request_handle_cb cb, void* cb_data){
+int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* wwwroot, int cacheoff, lua_State* L){
     int ret = -1;
     if (!web) {
         struct sockaddr_in listen_address;
@@ -98,8 +98,7 @@ int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* www
         web->loop = loop;
         web->wwwroot = wwwroot;
         web->cacheoff = cacheoff;
-        web->req_hd_cb = cb;
-        web->req_hd_cb_data = cb_data;
+        web->L = L;
         uv_ip4_addr(address, port, &listen_address);
         uv_tcp_init(web->loop, &web->server);
         uv_tcp_bind(&web->server, (const struct sockaddr*)&listen_address, 0);

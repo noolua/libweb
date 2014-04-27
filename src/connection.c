@@ -21,32 +21,8 @@ static void on_http_response_send_complete_cb(void* connection, int status){
 }
 
 static void on_http_parser_complete_cb(void* connection, int status){
-    char filepath[1024];
     mweb_http_connection_t *cnn = (mweb_http_connection_t*)connection;
-    mweb_server_t *server = cnn->server;
-    if(server->req_hd_cb){
-        
-    }else{
-        const char *root = cnn->server->wwwroot;
-        const char *url = cnn->request->url.base;
-        if(strcmp(url, "/") == 0){
-            url = "/index.html";
-        }
-        const char *tk = strstr(url, "?");
-        if(tk){
-            char dp[1024];
-            strncpy(dp, url, 1023);
-            dp[tk-url] = 0;
-            sprintf(filepath, "%s%s", root, dp);
-        }else{
-            sprintf(filepath, "%s%s", root, url);
-        }
-        if(filepath[strlen(filepath) - 1] == '/'){
-            cnn->response = mweb_http_response_404(cnn->stream, on_http_response_send_complete_cb, connection);
-        }else{
-            cnn->response = mweb_http_response_file(cnn->stream, on_http_response_send_complete_cb, connection, filepath);
-        }        
-    }
+    mweb_http_response(cnn, on_http_response_send_complete_cb);
 }
 
 mweb_http_connection_t *mweb_http_connection_create(mweb_server_t* server, uv_tcp_t *stream,

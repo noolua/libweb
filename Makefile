@@ -30,12 +30,12 @@ samples:$(LIBNAME) miniserver webserver
 miniserver:$(LIBNAME)
 	@echo "Compiling $@"
 	@$(CC) -I./include $(CFLAGS) -I./src -c ./samples/miniserver/miniserver.c -o ./samples/miniserver/miniserver.o
-	@$(CC) -I./include $(CFLAGS) ./samples/miniserver/miniserver.o -L./lib $(LDFLAGS) $(addprefix -l,$(LIBS)) -l${TARGET} -o ./samples/miniserver/$@
+	@$(CC) -I./include $(CFLAGS) ./samples/miniserver/miniserver.o -L./lib $(LDFLAGS) -l${TARGET} $(addprefix -l,$(LIBS)) -o ./samples/miniserver/$@
 	@$(STRIP) ./samples/miniserver/$@
 webserver:$(LIBNAME)
 	@echo "Compiling $@"
 	@$(CC) -I./include $(CFLAGS) -I./src -c ./samples/webserver/webserver.c -o ./samples/webserver/webserver.o
-	@$(CC) -I./include $(CFLAGS) ./samples/webserver/webserver.o -L./lib $(LDFLAGS) $(addprefix -l,$(LIBS)) -l${TARGET} -o ./samples/webserver/$@
+	@$(CC) -I./include $(CFLAGS) ./samples/webserver/webserver.o -L./lib $(LDFLAGS) -l${TARGET} $(addprefix -l,$(LIBS)) -o ./samples/webserver/$@
 	@$(STRIP) ./samples/webserver/$@
 install:
 	cp ./include/*.h ${PREFIX}/include/

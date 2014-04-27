@@ -6,6 +6,9 @@
 //  Copyright (c) 2014年 coco-hub.com. All rights reserved.
 //
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "response.h"
 
 #define CRLF "\r\n"

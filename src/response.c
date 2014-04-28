@@ -15,12 +15,21 @@
 static const char response_404[] =
 "HTTP/1.1 404 Not Found" CRLF
 "Server: libmweb/master" CRLF
-"Date: Thu, 23 Jan 2014 06:39:53 UTC" CRLF
 "Connection: Keep-Alive" CRLF
 "Content-Type: text/html" CRLF
 "Content-Length: 16" CRLF
 CRLF
 "404 Not Found" CRLF
+;
+
+static const char response_fmt_text[] =
+"HTTP/1.1 200 Ok" CRLF
+"Server: libmweb/master" CRLF
+"Connection: Keep-Alive" CRLF
+"Content-Type: text/html" CRLF
+"Content-Length: %u" CRLF
+CRLF
+"%s" CRLF
 ;
 
 
@@ -78,7 +87,11 @@ static mweb_response_lua_context_t *mweb_lua_context_create(mweb_http_connection
                 MWSTRING_COPY_CSTRING(context->res, res, strlen(res));
             }else{
                 res = luaL_checkstring(L, -1);
-                MWSTRING_COPY_CSTRING(context->res, res, strlen(res));
+                int len = strlen(res);
+                char *dummy = mweb_alloc(len + 256);
+                sprintf(dummy, response_fmt_text, len, res);
+                MWSTRING_COPY_CSTRING(context->res, dummy, strlen(dummy));
+                mweb_free(dummy);
             }
         }
     }
@@ -201,7 +214,7 @@ static mweb_http_response_t *mweb_http_response_lua(mweb_http_connection_t *cnn,
         response->connection = cnn;
         response->context = context;
         response->stream = cnn->stream;
-        response->buf = uv_buf_init((char*)context->res.base, context->res.len);
+        response->buf = uv_buf_init((char*)context->res.base, context->res.len-1);
         if(uv_write(&response->req, (uv_stream_t*)response->stream, &response->buf, 1, mweb_response_after_write_cb)){
             ERR("Send response failed\n");
         }

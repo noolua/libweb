@@ -232,9 +232,9 @@ typedef struct {
 }mweb_lua_chunked_req_t;
 
 static void mweb_lua_chunked_after_write_cb(uv_write_t* req, int status) {
-    mweb_lua_chunked_req_t* wr;
+    mweb_lua_chunked_req_t* wr = (mweb_lua_chunked_req_t*) req;
+    mweb_http_response_t *response = (mweb_http_response_t *)wr->req.data;
 
-    wr = (mweb_lua_chunked_req_t*) req;
     mweb_free(wr->buf.base);
     mweb_free(wr);
 
@@ -246,7 +246,6 @@ static void mweb_lua_chunked_after_write_cb(uv_write_t* req, int status) {
     if (status == UV_ECANCELED)
         return;
 
-    mweb_http_response_t *response = (mweb_http_response_t *)wr->req.data;
     mweb_response_lua_context_t *context = (mweb_response_lua_context_t *)response->context;
     mweb_lua_context_destory(context);
     response->context = NULL;
@@ -254,11 +253,10 @@ static void mweb_lua_chunked_after_write_cb(uv_write_t* req, int status) {
 }
 
 static void mweb_lua_chunked_close_after_write_cb(uv_write_t* req, int status) {
-    mweb_lua_chunked_req_t* wr;
-    wr = (mweb_lua_chunked_req_t*) req;
+    mweb_lua_chunked_req_t* wr = (mweb_lua_chunked_req_t*) req;
+    mweb_http_response_t *response = (mweb_http_response_t *)wr->req.data;
     mweb_free(wr);
 
-    mweb_http_response_t *response = (mweb_http_response_t *)wr->req.data;
     mweb_response_lua_context_t *context = (mweb_response_lua_context_t *)response->context;
     mweb_lua_context_destory(context);
     response->context = NULL;

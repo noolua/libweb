@@ -46,8 +46,6 @@ typedef struct mweb_response_text_context_s{
 }mweb_response_text_context_t;
 
 typedef struct mweb_response_lua_context_s{
-    int is_lua_thread;
-    lua_State *L;
     mweb_string_t res;
 }mweb_response_lua_context_t;
 

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include "connection.h"
+#include "response.h"
 #include "server.h"
 
 int MWEB_QUIET = 0;
@@ -98,7 +99,12 @@ int mweb_startup(uv_loop_t *loop, const char *address, int port, const char* www
         web->loop = loop;
         web->wwwroot = wwwroot;
         web->cacheoff = cacheoff;
-        web->L = L;
+        if(L){
+            web->L = L;
+        }else{
+            web->L = luaL_newstate();
+        }
+        luaopen_mweb(web->L);
         uv_ip4_addr(address, port, &listen_address);
         uv_tcp_init(web->loop, &web->server);
         uv_tcp_bind(&web->server, (const struct sockaddr*)&listen_address, 0);

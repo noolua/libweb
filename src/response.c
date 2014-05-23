@@ -332,7 +332,6 @@ int mweb_http_response(mweb_http_connection_t *cnn, mweb_http_response_send_comp
         if(filepath && cnn->server->L){
             lua_State *L = cnn->server->L;
             int error = -1;
-            printf("request: %s\n", cnn->request->url.base);
             error = luaL_loadstring(L, co_default_entry);
             if(error){
                 ERR("%s", lua_tostring(L, -1));

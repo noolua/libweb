@@ -47,6 +47,7 @@ typedef struct mweb_response_text_context_s{
 
 typedef struct mweb_response_lua_context_s{
     mweb_string_t res;
+    lua_State* co;
 }mweb_response_lua_context_t;
 
 typedef struct mweb_http_header_s{

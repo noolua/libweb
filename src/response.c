@@ -26,7 +26,7 @@ static const char response_lua_begin[] =
 "HTTP/1.1 200 Ok" CRLF
 "Server: libmweb/master" CRLF
 "Connection: Keep-Alive" CRLF
-"Content-Type: text/html" CRLF
+"Content-Type: application/octet-stream" CRLF
 "Transfer-Encoding: chunked" CRLF
 CRLF
 ;
@@ -57,11 +57,23 @@ static const char co_default_entry[] =
 "end" CRLF
 "local m = {say = say, version = '1.0.0', c = cnn};" CRLF
 "local co = coroutine.create(function(script, lib, ctx)" CRLF
+"  local run = coroutine.running();" CRLF
+"  if not _G.libmweb_cos then" CRLF
+"    _G.libmweb_cos = {};" CRLF
+"  end" CRLF
+"  table.insert(_G.libmweb_cos, run);" CRLF
+"  " CRLF
 "  local f = loadfile(script)" CRLF
 "  if f then" CRLF
 "    f(lib, ctx);" CRLF
 "  end" CRLF
 "  mweb.close(lib.c);" CRLF
+"  for k, v in pairs(_G.libmweb_cos) do" CRLF
+"    if v == run then" CRLF
+"       table.remove(_G.libmweb_cos, k);" CRLF
+"       break;" CRLF
+"    end" CRLF
+"  end" CRLF
 "end);" CRLF
 "coroutine.resume(co, filepath, m, t);" CRLF
 ;
@@ -236,7 +248,9 @@ static void mweb_lua_chunked_after_write_cb(uv_write_t* req, int status) {
     mweb_http_response_t *response = (mweb_http_response_t *)wr->req.data;
     mweb_response_lua_context_t *context = (mweb_response_lua_context_t*)response->context;
 
-    lua_resume(context->co, 0);
+    if(context && status == 0){
+        lua_resume(context->co, 0);
+    }
     mweb_free(wr->buf.base);
     mweb_free(wr);
 
@@ -248,7 +262,8 @@ static void mweb_lua_chunked_after_write_cb(uv_write_t* req, int status) {
     if (status == UV_ECANCELED)
         return;
 
-    mweb_lua_context_destory(context);
+    if(context)
+        mweb_lua_context_destory(context);
     response->context = NULL;
     response->response_send_complete_cb(response->connection, status);
 }
@@ -278,12 +293,12 @@ static int l_mweb_say(lua_State *L){
         const char *tail = "\r\n";
         sprintf(header, "%zX\r\n", msg_len);
         header_len = strlen(header);
-        char *base = (char*)mweb_alloc(msg_len+64);
+        char *base = (char*)mweb_alloc(msg_len+256);
         memcpy(base, header, header_len);
         memcpy(base+header_len, msg, msg_len);
-        memcpy(base + header_len + msg_len, tail, 2);
+        memcpy(base + header_len + msg_len, tail, tail_len);
         context->co = L;
-        wr->req.data = response;
+        wr->req.data = response;        
         wr->buf = uv_buf_init(base, header_len + msg_len + tail_len);
         uv_write(&wr->req, (uv_stream_t*)response->stream, &wr->buf, 1, mweb_lua_chunked_after_write_cb);
         return lua_yield(context->co, 0);
@@ -294,6 +309,7 @@ static int l_mweb_say(lua_State *L){
 }
 
 static int l_mweb_close(lua_State *L){
+    ERR("l_mweb_close\n");
     mweb_lua_chunked_req_t *wr;
     mweb_http_connection_t *cnn = (mweb_http_connection_t *)lua_topointer(L, 1);
     mweb_http_response_t *response = cnn->response;
@@ -321,7 +337,7 @@ int luaopen_mweb(lua_State* L){
 }
 
 int mweb_http_response(mweb_http_connection_t *cnn, mweb_http_response_send_complete_cb response_send_complete_cb){
-    char filepath[1024];
+    char filepath[8192];
     const char *root = cnn->server->wwwroot;
     const char *url = cnn->request->url.base;
     if(strcmp(url, "/") == 0){
@@ -329,8 +345,8 @@ int mweb_http_response(mweb_http_connection_t *cnn, mweb_http_response_send_comp
     }
     const char *tk = strstr(url, "?");
     if(tk){
-        char dp[1024];
-        strncpy(dp, url, 1023);
+        char dp[4096];
+        strncpy(dp, url, 4095);
         dp[tk-url] = 0;
         sprintf(filepath, "%s%s", root, dp);
     }else{

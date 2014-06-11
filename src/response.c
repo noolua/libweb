@@ -279,20 +279,19 @@ static int l_mweb_say(lua_State *L){
     size_t msg_len;
     const char *msg = luaL_checklstring(L, 2, &msg_len);
     int mode = 0; /*mode = zero, mean chunked encoding protocol, otherwise mean raw data.*/
-    // if(cnn->is_closed){
-    //     fprintf(stderr, "%s\n", "l_mweb_say cnn->is_closed");
-    //     mweb_response_lua_context_t *context = (mweb_response_lua_context_t*)response->context;
-    //     if(context){
-    //         if(context->co){
-    //             lua_rawgeti(context->co, LUA_REGISTRYINDEX, context->wa_func_ref);
-    //             lua_rawgeti(context->co, LUA_REGISTRYINDEX, context->wa_data_ref);
-    //             lua_pushinteger(context->co, -1);
-    //             lua_pushinteger(context->co, (int)msg_len);
-    //             lua_call(context->co, 3, 0);
-    //         }
-    //     }
-    //     return 0;
-    // }
+    if(uv_is_closing((uv_handle_t*)cnn->stream)){
+        mweb_response_lua_context_t *context = (mweb_response_lua_context_t*)response->context;
+        if(context){
+            if(context->co){
+                lua_rawgeti(context->co, LUA_REGISTRYINDEX, context->wa_func_ref);
+                lua_rawgeti(context->co, LUA_REGISTRYINDEX, context->wa_data_ref);
+                lua_pushinteger(context->co, -1);
+                lua_pushinteger(context->co, (int)msg_len);
+                lua_call(context->co, 3, 0);
+            }
+        }
+        return 0;
+    }
     if(lua_isnumber(L, 3)){
         mode = luaL_checkint(L, 3);
     }
@@ -331,14 +330,13 @@ static int l_mweb_close(lua_State *L){
     mweb_http_connection_t *cnn = (mweb_http_connection_t *)lua_topointer(L, 1);
     mweb_http_response_t *response = cnn->response;
 
-    // if(cnn->is_closed){
-    //     fprintf(stderr, "%s\n", "l_mweb_close cnn->is_closed");
-    //     mweb_response_lua_context_t *context = (mweb_response_lua_context_t *)response->context;
-    //     mweb_lua_context_destory(context);
-    //     response->context = NULL;
-    //     response->response_send_complete_cb(response->connection, -1);
-    //     return 0;
-    // }
+    if(uv_is_closing((uv_handle_t*)cnn->stream)){
+        mweb_response_lua_context_t *context = (mweb_response_lua_context_t *)response->context;
+        mweb_lua_context_destory(context);
+        response->context = NULL;
+        response->response_send_complete_cb(response->connection, -1);
+        return 0;
+    }
 
     wr = mweb_alloc(sizeof(mweb_lua_chunked_req_t));
     if(wr){

@@ -22,15 +22,14 @@ static void web_connection_close_cb(uv_handle_t* handle){
     mweb_free(handle);
 }
 
-static void web_connection_after_shutdown_cb(uv_shutdown_t* req, int status){
-    uv_close((uv_handle_t*)req->handle, web_connection_close_cb);
-    mweb_free(req);
-}
-
 static void web_connection_should_shutdown_cb(uv_stream_t* stream, int status){
-    uv_shutdown_t *req;
-    req = mweb_alloc(sizeof(uv_shutdown_t));
-    uv_shutdown(req, (uv_stream_t*)stream, web_connection_after_shutdown_cb);
+    if(uv_is_closing((uv_handle_t*)stream)){
+        mweb_http_connection_t *connection = (mweb_http_connection_t*)stream->data;
+        mweb_http_connection_destory(connection);
+        mweb_free(stream);
+    }else{
+        uv_close((uv_handle_t*)stream, web_connection_close_cb);
+    }
 }
 
 static void web_alloc_buffer_cb(uv_handle_t* client, size_t suggested_size, uv_buf_t* buf){
@@ -39,13 +38,13 @@ static void web_alloc_buffer_cb(uv_handle_t* client, size_t suggested_size, uv_b
 }
 
 static void web_request_after_read_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+    mweb_http_connection_t *connection = (mweb_http_connection_t *)stream->data;
     if (nread < 0) {
         if(nread != UV_EOF)
             ERR("Error on reading: %s.\n", uv_strerror((int)nread));
-        web_connection_should_shutdown_cb(stream, 0);
+        uv_close((uv_handle_t*)stream, NULL);
     }
     if(nread > 0){
-        mweb_http_connection_t *connection = (mweb_http_connection_t *)stream->data;
         
         size_t parsed = mweb_http_connection_parser(connection, buf->base, nread);
         if (parsed < nread){

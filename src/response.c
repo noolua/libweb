@@ -58,7 +58,10 @@ static const char co_default_entry[] =
 "local function write(msg)" CRLF
 "  return mweb.say(cnn, msg, 1);" CRLF
 "end" CRLF
-"local m = {say = say, write = write, version = '1.0.0', c = cnn};" CRLF
+"local function wa_cb(cb, cb_data)" CRLF
+"  return mweb.write_after_cb(cnn, cb, cb_data);" CRLF
+"end" CRLF
+"local m = {say = say, write = write, wa_cb = wa_cb, version = '1.0.0', c = cnn};" CRLF
 "local co = coroutine.create(function(script, lib, ctx)" CRLF
 "  local run = coroutine.running();" CRLF
 "  if not _G.libmweb_cos then" CRLF
@@ -114,6 +117,8 @@ static mweb_response_lua_context_t *mweb_lua_context_create(mweb_http_connection
     mweb_response_lua_context_t *context = mweb_alloc(sizeof(mweb_response_lua_context_t));
     if(context){
         MWSTRING_COPY_CSTRING(context->res, response_lua_begin, strlen(response_lua_begin));
+        context->co = NULL;
+        context->wa_func_ref = context->wa_data_ref = LUA_REFNIL;
     }
     return context;
 }
@@ -130,6 +135,10 @@ static void mweb_text_context_destory(mweb_response_text_context_t* context){
 
 static void mweb_lua_context_destory(mweb_response_lua_context_t* context){
     MWSTRING_RELEASE(context->res);
+    if(context->co){
+        luaL_unref(context->co, LUA_REGISTRYINDEX, context->wa_func_ref);
+        luaL_unref(context->co, LUA_REGISTRYINDEX, context->wa_data_ref);
+    }
     mweb_free(context);
 }
 
@@ -196,27 +205,6 @@ static mweb_http_response_t *mweb_http_response_file(mweb_http_connection_t *cnn
     return response;
 }
 
-/*
-static mweb_http_response_t *mweb_http_response_text(mweb_http_connection_t *cnn, mweb_http_response_send_complete_cb response_send_complete_cb, const char* text){
-    mweb_http_response_t *response = mweb_alloc(sizeof(mweb_http_response_t));
-    mweb_response_text_context_t *context = mweb_alloc(sizeof(mweb_response_text_context_t));
-    if(context){
-        MWSTRING_COPY_CSTRING(context->text, text, strlen(text));
-        response->type = response_type_text;
-        response->req.data = response;
-        response->response_send_complete_cb = response_send_complete_cb;
-        response->connection = cnn;
-        response->context = context;
-        response->buf = uv_buf_init((char*)context->text.base, context->text.len);
-        if(uv_write(&response->req, (uv_stream_t*)cnn->stream, &response->buf, 1, mweb_response_after_write_cb)){
-            ERR("Send response failed\n");
-        }
-    }else{
-        return mweb_http_response_404(cnn, response_send_complete_cb);
-    }
-    return response;    
-}
-*/
 static mweb_http_response_t *mweb_http_response_lua(mweb_http_connection_t *cnn, mweb_http_response_send_complete_cb response_send_complete_cb, const char* filepath){
     mweb_http_response_t *response = NULL;
     mweb_response_lua_context_t *context = mweb_lua_context_create(cnn, filepath);
@@ -244,6 +232,7 @@ static mweb_http_response_t *mweb_http_response_lua(mweb_http_connection_t *cnn,
 typedef struct {
     uv_write_t req;
     uv_buf_t buf;
+    size_t data_len;
 }mweb_lua_chunked_req_t;
 
 static void mweb_lua_chunked_after_write_cb(uv_write_t* req, int status) {
@@ -252,8 +241,13 @@ static void mweb_lua_chunked_after_write_cb(uv_write_t* req, int status) {
     mweb_response_lua_context_t *context = (mweb_response_lua_context_t*)response->context;
 
     if(context){
-        lua_pushinteger(context->co, status);
-        lua_resume(context->co, 1);
+        if(context->co){
+            lua_rawgeti(context->co, LUA_REGISTRYINDEX, context->wa_func_ref);
+            lua_rawgeti(context->co, LUA_REGISTRYINDEX, context->wa_data_ref);
+            lua_pushinteger(context->co, status);
+            lua_pushinteger(context->co, wr->data_len);
+            lua_call(context->co, 3, 0);
+        }
     }
     mweb_free(wr->buf.base);
     mweb_free(wr);
@@ -282,10 +276,23 @@ static int l_mweb_say(lua_State *L){
     mweb_lua_chunked_req_t *wr;
     mweb_http_connection_t *cnn = (mweb_http_connection_t *)lua_topointer(L, 1);        
     mweb_http_response_t *response = cnn->response;
-    mweb_response_lua_context_t *context = (mweb_response_lua_context_t*)response->context;
     size_t msg_len;
     const char *msg = luaL_checklstring(L, 2, &msg_len);
     int mode = 0; /*mode = zero, mean chunked encoding protocol, otherwise mean raw data.*/
+    // if(cnn->is_closed){
+    //     fprintf(stderr, "%s\n", "l_mweb_say cnn->is_closed");
+    //     mweb_response_lua_context_t *context = (mweb_response_lua_context_t*)response->context;
+    //     if(context){
+    //         if(context->co){
+    //             lua_rawgeti(context->co, LUA_REGISTRYINDEX, context->wa_func_ref);
+    //             lua_rawgeti(context->co, LUA_REGISTRYINDEX, context->wa_data_ref);
+    //             lua_pushinteger(context->co, -1);
+    //             lua_pushinteger(context->co, (int)msg_len);
+    //             lua_call(context->co, 3, 0);
+    //         }
+    //     }
+    //     return 0;
+    // }
     if(lua_isnumber(L, 3)){
         mode = luaL_checkint(L, 3);
     }
@@ -309,12 +316,10 @@ static int l_mweb_say(lua_State *L){
             memcpy(base + header_len + msg_len, tail, tail_len);
             packet_len = header_len + msg_len + tail_len;
         }
-
-        context->co = L;
         wr->req.data = response;        
         wr->buf = uv_buf_init(base, packet_len);
+        wr->data_len = msg_len;
         uv_write(&wr->req, (uv_stream_t*)response->stream, &wr->buf, 1, mweb_lua_chunked_after_write_cb);
-        return lua_yield(context->co, 0);
     }else{
         ERR("mweb_alloc mweb_lua_chunked_req_t failed\n");
     }
@@ -325,6 +330,15 @@ static int l_mweb_close(lua_State *L){
     mweb_lua_chunked_req_t *wr;
     mweb_http_connection_t *cnn = (mweb_http_connection_t *)lua_topointer(L, 1);
     mweb_http_response_t *response = cnn->response;
+
+    // if(cnn->is_closed){
+    //     fprintf(stderr, "%s\n", "l_mweb_close cnn->is_closed");
+    //     mweb_response_lua_context_t *context = (mweb_response_lua_context_t *)response->context;
+    //     mweb_lua_context_destory(context);
+    //     response->context = NULL;
+    //     response->response_send_complete_cb(response->connection, -1);
+    //     return 0;
+    // }
 
     wr = mweb_alloc(sizeof(mweb_lua_chunked_req_t));
     if(wr){
@@ -337,9 +351,29 @@ static int l_mweb_close(lua_State *L){
     return 0;
 }
 
+static int l_mweb_write_after_cb(lua_State *L){
+    mweb_http_connection_t *cnn = (mweb_http_connection_t *)lua_topointer(L, 1);        
+    mweb_http_response_t *response = cnn->response;
+    mweb_response_lua_context_t *ctx = (mweb_response_lua_context_t*)response->context;
+    if(ctx->co){
+        luaL_unref(ctx->co, LUA_REGISTRYINDEX, ctx->wa_func_ref);
+        luaL_unref(ctx->co, LUA_REGISTRYINDEX, ctx->wa_data_ref);
+    }
+    ctx->co = cnn->server->L;
+    ctx->wa_func_ref = ctx->wa_data_ref = LUA_REFNIL;
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+    lua_pushvalue(L, 2);
+    ctx->wa_func_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    lua_pushvalue(L, 3);
+    ctx->wa_data_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    lua_pushinteger(L, 0);
+    return 0;
+}
+
 static struct  luaL_Reg mweb_methods[] = {
     {"say", l_mweb_say},
     {"close", l_mweb_close},
+    {"write_after_cb", l_mweb_write_after_cb},
     {NULL, NULL},
 };
 
@@ -368,7 +402,7 @@ int mweb_http_response(mweb_http_connection_t *cnn, mweb_http_response_send_comp
         cnn->response = mweb_http_response_404(cnn, response_send_complete_cb);
     }else if(strcmp(filepath + strlen(filepath) - 4, ".lua") == 0){
         cnn->response = mweb_http_response_lua(cnn, response_send_complete_cb, filepath);
-        if(filepath && cnn->server->L){
+        if(cnn->server->L){
             lua_State *L = cnn->server->L;
             int error = -1;
             error = luaL_loadstring(L, co_default_entry);

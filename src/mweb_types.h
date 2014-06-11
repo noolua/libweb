@@ -48,6 +48,8 @@ typedef struct mweb_response_text_context_s{
 typedef struct mweb_response_lua_context_s{
     mweb_string_t res;
     lua_State* co;
+    int wa_func_ref; /*write after complete func*/
+    int wa_data_ref; /*write after complete func data*/
 }mweb_response_lua_context_t;
 
 typedef struct mweb_http_header_s{

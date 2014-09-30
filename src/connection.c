@@ -27,7 +27,7 @@ static void on_http_parser_complete_cb(void* connection, int status){
 
 mweb_http_connection_t *mweb_http_connection_create(mweb_server_t* server, uv_tcp_t *stream,
                                                     mweb_http_connection_should_close_cb connection_should_close_cb){
-    fprintf(stderr, "%s\n", "mweb_http_connection_create");
+    // fprintf(stderr, "%s\n", "mweb_http_connection_create");
     mweb_http_connection_t *connection = mweb_alloc(sizeof(mweb_http_connection_t));
     connection->server = server;
     connection->stream = stream;
@@ -47,5 +47,5 @@ void mweb_http_connection_destory(mweb_http_connection_t* connection){
     if(connection->response)
         mweb_http_response_destory(connection->response);
     mweb_free(connection);
-    fprintf(stderr, "%s\n", "mweb_http_connection_destory");
+    // fprintf(stderr, "%s\n", "mweb_http_connection_destory");
 }
